@@ -4,7 +4,7 @@ from enum import Enum
 import json
 from types import SimpleNamespace
 
-CONFIG_FILEPATH = "configs/reconcile_accounts.json"
+CONFIG_FILEPATH = "config/reconcile_accounts.json"
 
 class MatchingStatus(Enum):
     FOUND = "FOUND"
