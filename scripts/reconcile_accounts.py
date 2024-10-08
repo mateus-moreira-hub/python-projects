@@ -3,6 +3,7 @@ import datetime as dt
 from enum import Enum
 import json
 from types import SimpleNamespace
+from typing import Optional
 
 CONFIG_FILEPATH = "config/reconcile_accounts.json"
 
@@ -31,13 +32,14 @@ class Account:
     beneficiary: str = ""
     matching_status: MatchingStatus = MatchingStatus.MISSING
     order: int = 0
+    value_decimal_places: int = 0
 
     # cria o objeto partindo de uma lista e da config de leitura
     def from_list(
         self, 
-        data: list, 
+        data: list,
         config: AccountsReadingConfig, 
-        order: int
+        order: int = 0
     ) -> "Account":
         self.date = dt.datetime.strptime(
             data[config.columns_order.index("date")], 
@@ -47,6 +49,7 @@ class Account:
         self.value = float(data[config.columns_order.index("value")])
         self.beneficiary = data[config.columns_order.index("beneficiary")]
         self.order = order
+        self.value_decimal_places = len(data[config.columns_order.index("value")].split(".")[-1])
         return self
 
     # retorna o objeto como uma lista
@@ -54,7 +57,7 @@ class Account:
         return [
             str(self.date), 
             self.department, 
-            str(self.value), 
+            str("{:." + str(self.value_decimal_places) + "f}").format(self.value), 
             self.beneficiary, 
             self.matching_status.value
         ]
@@ -70,7 +73,7 @@ class Account:
             self.date <= account.date + \
                 dt.timedelta(days=matching_config.plus_or_minus_days_tolerance) and
             self.date >= account.date + \
-                dt.timedelta(days=(-1)+matching_config.plus_or_minus_days_tolerance) and
+                dt.timedelta(days=(-1)*matching_config.plus_or_minus_days_tolerance) and
             round(self.value, matching_config.float_decimal_places) == \
                 round(account.value, matching_config.float_decimal_places) and (
                 (
@@ -98,10 +101,14 @@ def data_to_accounts(data: list, config: AccountsReadingConfig) -> list[Account]
 def accounts_to_data(accounts: list[Account]) -> list:
     return [acc.to_list() for acc in sorted(accounts, key=lambda x: x.order)]
 
-def reconcile_accounts(transactions1: list, transactions2: list) -> tuple[list, list]:
+def reconcile_accounts(
+    transactions1: list, 
+    transactions2: list, 
+    config: Optional[ReconcileAccountsConfig]=None
+) -> tuple[list, list]:
 
     # lê a configuração da função
-    config = read_config()
+    config = config or read_config()
 
     # cria duas listas de objetos Account
     accounts1, accounts2 = (
