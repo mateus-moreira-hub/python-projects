@@ -1,0 +1,11 @@
+{
+    "accounts_reading_config": {
+        "columns_order": ["date", "department", "value", "beneficiary"],
+        "date_format": "%Y-%m-%d"
+    },
+    "accounts_matching_config": {
+        "float_decimal_places": 10,
+        "is_case_sensitive": true,
+        "plus_or_minus_days_tolerance": 1
+    }
+}
